@@ -17,11 +17,6 @@ $(document).ready(function () {
         startSubstitution(codeToParse,args);
         let cfgCode=createGraph(parsedCode2,codeToParse);
         let a=viz('digraph{'+cfgCode+'}');
-        // $('#parsedCode').val(JSON.stringify(parsedCode, null, 2));
-        // let args=$('#argsPlaceholder').val();
-        // //let lines= makeArray(parsedCode);
-        // //insertToTable(lines);
-        // startSubstitution(codeToParse,args);
         displayFuncWithColor(a);
     });
 });

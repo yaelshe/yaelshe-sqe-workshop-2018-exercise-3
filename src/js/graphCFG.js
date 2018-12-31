@@ -74,21 +74,18 @@ function removeConn(cfgLines,indexStart,indexFinish){
         let index = j;
         let string = 'n' + index;
         for (let i = 0; i < cfgLines.length; i++) {
-            cfgLines= conRemoveConn(cfgLines,i,string,indexFinish);
+            let curr = cfgLines[i];
+            if (!curr.includes('->'))
+                continue;
+            if(curr.includes('-> '+string+' '))
+                cfgLines[i] = cfgLines[i].replace('-> ' + string, '-> n' + (indexFinish));
+            else if (curr.includes(string+' ->')) {
+                cfgLines[i] = '';
+            }
         }
     }
     return cfgLines;
-}
-function conRemoveConn(cfgLines,i,string,indexFinish){
-    let curr = cfgLines[i];
-    if (!curr.includes('->'))
-        return cfgLines;
-    if(curr.includes('-> '+string))
-        cfgLines[i] = cfgLines[i].replace('-> ' + string, '-> n' + (indexFinish));
-    else if (curr.includes(string)) {
-        cfgLines[i] = '';
-    }
-    return cfgLines;
+
 }
 function combineReturn(cfgLines)
 {
@@ -269,9 +266,8 @@ function colorRealGraph(cfgLines,cfg) {
     return cfgLines;}
 
 function checkIf(current){
-    if(current.parent.type !== 'WhileStatement' && current.parent.type !== 'IfStatement')
-        return true;
-    return false;
+    return current.parent.type !== 'WhileStatement' && current.parent.type !== 'IfStatement';
+
 }
 function getBool(cfgLines,counter) {
     if(cfgLines[counter].includes('true'))
