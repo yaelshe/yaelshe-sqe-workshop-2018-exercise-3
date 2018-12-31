@@ -16,6 +16,7 @@ function createGraph(parsedCode,codeToParse) {
     cfgLines= changeShapes(cfgLines);
     cfgLines= colorGraph(cfgLines,cfg);
     cfgLines= colorRealGraph(cfgLines,cfg);
+    cfgLines=addNumbers(cfgLines);
     let result= getString(cfgLines);
     return result;
 }
@@ -297,4 +298,18 @@ function getCurrent(current)
     else if(result.length>1)
         return current.next[1];
     else return false;
+}
+function addNumbers(cfgLines) {
+    let counter=1;
+    for(let i = 0; i < cfgLines.length; i++) {
+        if(cfgLines[i].includes('->'))
+            break;
+        if(cfgLines[i].includes('label')&&!cfgLines[i].includes('shape="circle"')){
+            let index=cfgLines[i].indexOf('label="')+7;
+            let replace = cfgLines[i].slice(0, index) + '('+counter+') \n'+cfgLines[i].slice(index);
+            cfgLines[i]=replace;
+            counter++;
+        }
+    }
+    return cfgLines;
 }
