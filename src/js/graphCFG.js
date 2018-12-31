@@ -1,6 +1,6 @@
 const esgraph = require('esgraph');
 import {colors} from './symbolicSubstitution';
-export {createGraph}
+export {createGraph};
 var returnIndex='';
 var indexExit='';
 function createGraph(parsedCode,codeToParse) {
@@ -42,11 +42,16 @@ function removeExit(cfgLines){
             stringIndex=stringIndex+indexExit;
             cfgLines[i]='';
         }
-        if(indexExit!==''&&cfgLines[i].includes(stringIndex))
-            cfgLines[i]='';
-        if(cfgLines[i].includes('return')) {
-            returnIndex = i;
-        }
+        cfgLines=continueRemoveExit(cfgLines,i,stringIndex);
+    }
+    return cfgLines;
+}
+
+function continueRemoveExit(cfgLines,i,stringIndex){
+    if(indexExit!==''&&cfgLines[i].includes(stringIndex))
+        cfgLines[i]='';
+    if(cfgLines[i].includes('return')) {
+        returnIndex = i;
     }
     return cfgLines;
 }
@@ -63,48 +68,26 @@ function changeArrow(cfgLines){
 
 }
 
-function combineDeclarations(cfgLines){
-    let indexStart;
-    let start=false;
-    let combString='';
-    let indexFinish;
-    let dec=true;
-    for(let i = 0; i < cfgLines.length && dec; i++){
-        let check=cfgLines[i];
-        if(check.includes('let')) {
-            let string = check.substring(check.indexOf('let ') + 4, check.indexOf(";") + 1) + '\n';
-            cfgLines[i] = '';
-            combString = combString + string;
-            indexFinish = i;
-            if (!start) {
-                indexStart = i;
-                start = true;
-            }
-        }
-        else{
-            if(i !== 0)
-                dec=false;}}
-    cfgLines[indexFinish]='n'+indexFinish+ ' [label="'+combString+'"]';
-    cfgLines=removeConn(cfgLines,indexStart,indexFinish);
-    return cfgLines;
-}
 function removeConn(cfgLines,indexStart,indexFinish){
     for(let j=indexStart;j<indexFinish;j++ ) {
         let index = j;
         let string = 'n' + index;
         for (let i = 0; i < cfgLines.length; i++) {
-            let curr = cfgLines[i];
-            if (!curr.includes('->'))
-                continue;
-            if(curr.includes('-> '+string))
-                cfgLines[i] = cfgLines[i].replace('-> ' + string, '-> n' + (indexFinish));
-            else if (curr.includes(string)) {
-                cfgLines[i] = '';
-            }
+            cfgLines= conRemoveConn(cfgLines,i,string,indexFinish);
         }
     }
     return cfgLines;
-
+}
+function conRemoveConn(cfgLines,i,string,indexFinish){
+    let curr = cfgLines[i];
+    if (!curr.includes('->'))
+        return cfgLines;
+    if(curr.includes('-> '+string))
+        cfgLines[i] = cfgLines[i].replace('-> ' + string, '-> n' + (indexFinish));
+    else if (curr.includes(string)) {
+        cfgLines[i] = '';
+    }
+    return cfgLines;
 }
 function combineReturn(cfgLines)
 {
@@ -112,10 +95,6 @@ function combineReturn(cfgLines)
     cfgLines.splice(indexExit, 0, string);
     cfgLines=changeArrow(cfgLines);
     cfgLines.push('n'+(indexExit)+' -> n'+returnIndex +' []');
-
-    //need to add new node
-    //need to add from new node to return node arrow
-    //need to change all arrow to return to new node
     return cfgLines;
 }
 
@@ -129,31 +108,41 @@ function removeException(cfgLines){
 }
 function changeShapes(cfgLines){
     for(let i = 0; i < cfgLines.length; i++) {
-        if(cfgLines[i].includes('!')||cfgLines[i].includes('==')||cfgLines[i].includes('>')||cfgLines[i].includes('<')) {
+        if(checkForShapes(cfgLines,i)) {
             let index=cfgLines[i].lastIndexOf(']');
             let replace = cfgLines[i].slice(0, index) + ' shape="diamond"' + cfgLines[i].slice(index);
             cfgLines[i] = replace;
         }
-        else if(cfgLines[i].includes('label=""')){
-            let index=cfgLines[i].lastIndexOf(']');
-            let replace = cfgLines[i].slice(0, index) + ' shape="circle"' +' fillcolor="green" style="filled"'+ cfgLines[i].slice(index);
-            cfgLines[i] = replace;
-        }
-        else if(!cfgLines[i].includes('->')){
-            let index=cfgLines[i].lastIndexOf(']');
-            let replace = cfgLines[i].slice(0, index) + ' shape="box"' + cfgLines[i].slice(index);
-            cfgLines[i] = replace;
-        }
+        else cfgLines=conChangeShapes(cfgLines,i);
+    }
+    return cfgLines;
+}
+function checkForShapes(cfgLines,i)
+{
+    if(cfgLines[i].includes('!')||cfgLines[i].includes('==')||cfgLines[i].includes('>')||cfgLines[i].includes('<'))
+        return true;
+    else
+        return false;
+}
+function conChangeShapes(cfgLines,i){
+    if(cfgLines[i].includes('label=""')){
+        let index=cfgLines[i].lastIndexOf(']');
+        let replace = cfgLines[i].slice(0, index) + ' shape="circle"' +' fillcolor="green" style="filled"'+ cfgLines[i].slice(index);
+        cfgLines[i] = replace;
+    }
+    else if(!cfgLines[i].includes('->')){
+        let index=cfgLines[i].lastIndexOf(']');
+        let replace = cfgLines[i].slice(0, index) + ' shape="box"' + cfgLines[i].slice(index);
+        cfgLines[i] = replace;
     }
     return cfgLines;
 }
 function combineDec(cfgLines){
     let indexFirst='';
     let finishIndex=1;
-    // let firsts = [];
     for(let i = 0; i < cfgLines.length; i=i+finishIndex){
         let index=i;
-        while(checkIfDeclare(cfgLines[index])!==''&&checkIfDeclare(cfgLines[index+1])!==''&&checkCon(cfgLines,index))
+        while(checkWhileCon(cfgLines,index))
         {
             if(indexFirst==='')
                 indexFirst=index;
@@ -163,12 +152,15 @@ function combineDec(cfgLines){
         if(indexFirst!=='') {
             cfgLines=combineDecIndex(cfgLines,indexFirst, finishIndex);
             indexFirst = '';
-        }
-        else
+        } else
             finishIndex=1;
     }
-
     return cfgLines;
+}
+function checkWhileCon(cfgLines,index){
+    if(checkIfDeclare(cfgLines[index])!==''&&checkIfDeclare(cfgLines[index+1])!==''&&checkCon(cfgLines,index))
+        return true;
+    return false;
 }
 function combineDecIndex(cfgLines,indexFirst, finishIndex) {
     let joinLabel='';
@@ -187,15 +179,15 @@ function checkIfDeclare(string)
 {
     let result ='';
     if(string.includes('let')) {
-        result= string.substring(string.indexOf('let ') + 4, string.indexOf(";")) + '\n';
+        result= string.substring(string.indexOf('let ') + 4, string.indexOf(';')) + '\n';
         return result;
     }
     if(string.includes('++')||string.includes('--')) {
-        result= string.substring(string.indexOf('label=') + 7, string.lastIndexOf("]")-1) + '\n';
+        result= string.substring(string.indexOf('label=') + 7, string.lastIndexOf(']')-1) + '\n';
         return result;
     }
     if(string.includes(' = ')) {
-        result= string.substring(string.indexOf('label=') + 7, string.lastIndexOf("]")-1) + '\n';
+        result= string.substring(string.indexOf('label=') + 7, string.lastIndexOf(']')-1) + '\n';
         return result;
     }
     return result;
@@ -205,7 +197,7 @@ function colorGraph(cfgLines,cfg)
     let IfStatement=[];
     for(let i=1;i< cfg[2].length-1;i++)
     {
-        if(cfg[2][i].parent.type!==undefined &&cfg[2][i].parent.type==='IfStatement'){
+        if(checkIfCond(cfg,i)){
             IfStatement.push(i);
         }
         if(cfg[2][i].parent.type!==undefined &&cfg[2][i].parent.type==='WhileStatement'){
@@ -215,6 +207,12 @@ function colorGraph(cfgLines,cfg)
     cfgLines=changeToColor(cfgLines,IfStatement);
     return cfgLines;
 }
+function checkIfCond(cfg,i){
+    if(cfg[2][i].parent.type!==undefined &&cfg[2][i].parent.type==='IfStatement')
+        return true;
+    return false;
+}
+
 function checkCon(cfgLines,index)
 {
     if(cfgLines.includes('n'+index+' -> n'+(index+1)+' []'))
@@ -253,33 +251,26 @@ function colorRealGraph(cfgLines,cfg) {
     let current=cfg[2][1];
     let counter=1;
     while(current.astNode){
-        if(current.astNode.type==='ReturnStatement')
-        {
-            nodesToColor.push(cfg[2].indexOf(current));
-            break;
-        }
-        if(current.parent.type !== 'WhileStatement' && current.parent.type !== 'IfStatement') {
+        if(current.astNode.type==='ReturnStatement') {
+            nodesToColor.push(cfg[2].indexOf(current));break;
+        }if(checkIf(current)) {
             nodesToColor.push(counter);
             counter++;
             current=getCurrent(current);
-        }
-        else {
-            let value=getBool(cfgLines,counter);
-            if(value) {
-                nodesToColor.push(counter);
+        } else {let value=getBool(cfgLines,counter);
+            if(value) {nodesToColor.push(counter);
                 counter=cfg[2].indexOf(current.true);
                 current=current.true;
-            }
-            else {
-                nodesToColor.push(counter);
+            } else {nodesToColor.push(counter);
                 counter=(cfg[2].indexOf(current.false));
-                current=current.false;
-            }
-        }
+                current=current.false;}
+        }}cfgLines=getNodeColor(cfgLines,nodesToColor);
+    return cfgLines;}
 
-    }
-    cfgLines=getNodeColor(cfgLines,nodesToColor);
-    return cfgLines;
+function checkIf(current){
+    if(current.parent.type !== 'WhileStatement' && current.parent.type !== 'IfStatement')
+        return true;
+    return false;
 }
 function getBool(cfgLines,counter) {
     if(cfgLines[counter].includes('true'))
@@ -287,7 +278,6 @@ function getBool(cfgLines,counter) {
     else return false;
 }
 function getNodeColor(cfgLines,nodesToColor){
-    let finish=true;
     for(let i = 0; i < nodesToColor.length; i++) {
         let index = nodesToColor[i];
         if (cfgLines[index].includes('[')) {

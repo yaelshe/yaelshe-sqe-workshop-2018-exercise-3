@@ -1,10 +1,10 @@
 
 import $ from 'jquery';
 import * as viz from 'viz.js';
-import {functionCode, makeArray} from './code-analyzer';
-import {createGraph} from './graphCFG'
+import {makeArray} from './code-analyzer';
+import {createGraph} from './graphCFG';
 import {parseCode} from './code-analyzer';
-import {startSubstitution,newLines,colors} from './symbolicSubstitution';
+import {startSubstitution} from './symbolicSubstitution';
 import * as esprima from 'esprima';
 $(document).ready(function () {
     $('#codeSubmissionButton').click(() => {
