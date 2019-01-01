@@ -74,17 +74,21 @@ function removeConn(cfgLines,indexStart,indexFinish){
         let index = j;
         let string = 'n' + index;
         for (let i = 0; i < cfgLines.length; i++) {
-            let curr = cfgLines[i];
-            if (!curr.includes('->'))
-                continue;
-            if(curr.includes('-> '+string+' '))
-                cfgLines[i] = cfgLines[i].replace('-> ' + string, '-> n' + (indexFinish));
-            else if (curr.includes(string+' ->')) {
-                cfgLines[i] = '';
-            }
+            conRemove(cfgLines,i,string,indexFinish);
         }
     }
     return cfgLines;
+
+}
+function conRemove(cfgLines,i,string,indexFinish) {
+    let curr = cfgLines[i];
+    if (!curr.includes('->'))
+        return cfgLines;
+    if(curr.includes('-> '+string+' '))
+        cfgLines[i] = cfgLines[i].replace('-> ' + string, '-> n' + (indexFinish));
+    else if (curr.includes(string+' ->')) {
+        cfgLines[i] = '';
+    }
 
 }
 function combineReturn(cfgLines)
@@ -248,7 +252,7 @@ function colorRealGraph(cfgLines,cfg) {
     let nodesToColor=[];
     let current=cfg[2][1];
     let counter=1;
-    while(current.astNode){
+    while(checkWhile(current)){
         if(current.astNode.type==='ReturnStatement') {
             nodesToColor.push(cfg[2].indexOf(current));break;
         }if(checkIf(current)) {
@@ -268,6 +272,11 @@ function colorRealGraph(cfgLines,cfg) {
 function checkIf(current){
     return current.parent.type !== 'WhileStatement' && current.parent.type !== 'IfStatement';
 
+}
+function checkWhile(current){
+    if(current||current.astNode)
+        return true;
+    else return false;
 }
 function getBool(cfgLines,counter) {
     if(cfgLines[counter].includes('true'))
