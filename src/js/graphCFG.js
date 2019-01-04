@@ -11,7 +11,7 @@ function createGraph(parsedCode,codeToParse) {
     let cfgLines=cfgObject.split('\n');
     cfgLines=removeFirst(cfgLines);
     cfgLines=removeExit(cfgLines);
-    cfgLines=removeException(cfgLines);
+    //cfgLines=removeException(cfgLines);
     cfgLines= combineDec(cfgLines);
     //cfgLines=combineReturn(cfgLines);
     cfgLines= changeShapes(cfgLines);
@@ -151,14 +151,14 @@ function checkInRate(cfgLines,index){
     return result;
 }
 
-function removeException(cfgLines){
-    for(let i = 0; i < cfgLines.length; i++){
-        let check=cfgLines[i];
-        if(check.includes('exception'))
-            cfgLines.splice(i,1);
-    }
-    return cfgLines;
-}
+// function removeException(cfgLines){
+//     for(let i = 0; i < cfgLines.length; i++){
+//         let check=cfgLines[i];
+//         if(check.includes('exception'))
+//             cfgLines.splice(i,1);
+//     }
+//     return cfgLines;
+// }
 function changeShapes(cfgLines){
     for(let i = 0; i < cfgLines.length; i++) {
         if(checkForShapes(cfgLines,i)) {
@@ -275,7 +275,7 @@ function changeToColor(cfgLines,IfStatement){
     for(let i=0;i<IfStatement.length;i++)
     {
         let color=getToColor(i);
-        let index=cfgLines[i].lastIndexOf(']');
+        let index=cfgLines[IfStatement[i]].lastIndexOf(']');
         //let replace = cfgLines[IfStatement[i]].slice(0, index) + ' fillcolor="'+color+'" style="filled"' +cfgLines[IfStatement[i]].slice(index);
         let replace = cfgLines[IfStatement[i]].slice(0, index) + ' value="'+color+'"'+cfgLines[IfStatement[i]].slice(index);
         cfgLines[IfStatement[i]]=replace;

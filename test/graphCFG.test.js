@@ -811,4 +811,289 @@ describe('Substitution Checks',()=>{
             'n11 [label="" fillcolor="green" style="filled"]';
         assert.deepEqual(result, expectedResult);
     });
+    it('test grpah if with second while example', ()=> {
+        let code = 'function foo(x, y, z){\n'+
+            'let a = x + 1;\n'+
+            'let b = a + y;\n'+
+            'let c = 0;\n'+
+            'while (a < z) {\n'+
+                'c = a + b;\n'+
+                'z = c * 2;\n'+
+                'a++;\n'+
+            '}\n'+
+            'return z;\n'+
+        '}';
+        let vars = 'foo(1,2,3)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        let parsedCode2 =esprima.parseScript(code,{range:true});
+        startSubstitution(code, vars);
+        let result = createGraph(parsedCode2,code);
+        let expectedResult=' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n3 [label="(1) \n'+
+            'a = x + 1\n'+
+            'b = a + y\n'+
+            'c = 0\n'+
+            '" shape="box" fillcolor="green" style="filled"]\n'+
+            'n4 [label="(2) \n'+
+            'a < z" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n7 [label="(3) \n'+
+            'c = a + b\n'+
+            'z = c * 2\n'+
+            'a++\n'+
+            '" shape="box" fillcolor="green" style="filled"]\n'+
+            'n8 [label="(4) \n'+
+            'return z;" shape="box" fillcolor="green" style="filled" fillcolor="green" style="filled"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n3 -> n10 [ shape="diamond"]\n'+
+            'n4 -> n7 [label="true" shape="diamond"]\n'+
+            'n4 -> n8 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n7 -> n10 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n10 -> n4 []\n'+
+            'n10 [label="" fillcolor="green" style="filled"]';
+        assert.deepEqual(result, expectedResult);
+    });
+    it('Array in arguments for function',()=> {
+        let code = 'function foo(array,num){\n' +
+            'if(array[1]=="asaf" && num==1){\n' +
+            'return true;\n' +
+            '}\n' +
+            '}';
+        let vars = 'foo([87,\'asaf\',false,7],0)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp, vars);
+        let result='';
+        for(let i=0;i<newLines.length;i++){
+            result= result+ newLines[i]+'\n';
+        }
+        assert.deepEqual('function foo(array,num){\n' +
+            'if(array [ 1 ]  == "asaf" && num == 1){\n' +
+            'return true;\n' +
+            '}\n' +
+            '}\n', result);
+    });
+    it('Global array no arguments', ()=>{
+        let code='let array=[true];\n' +
+            'function foo(){\n' +
+            'let index=0;\n' +
+            'if(array[index]){\n' +
+            'return true;\n' +
+            '\n'+
+            '}\n' +
+            '}'+'\n   ';
+        let vars='';
+        let temp=parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp,vars);
+        let result='';
+        for(let i=0;i<newLines.length;i++){
+            result= result+ newLines[i]+'\n';
+        }
+        assert.deepEqual(result,'function foo(){\n' +
+            'if(array [ 0 ] ){\n' +
+            'return true;\n' +
+            '}\n' +
+            '}\n');
+    });
+    it('Math operations and zero handling', ()=>{
+        let code= 'function foo(x,y){\n' +
+            'let num=0+x;\n' +
+            'num=x+0;\n'+
+            'num=0+x;\n'+
+            'num=x+y;\n'+
+            'num=x-0;\n'+
+            'num=x-y;\n'+
+            'num=3-2;\n'+
+            'num=2*3;\n'+
+            'num=a*3;\n'+
+            'num=2*x;\n'+
+            'num=y*x;\n'+
+            'num=1/3;\n'+
+            'num=x/10;\n'+
+            'num=5/x;\n'+
+            'num=b/x;\n'+
+            '}';
+        let vars='foo(76,5)';
+        let temp=parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp,vars);
+        let result='';
+        for(let i=0;i<newLines.length;i++){
+            result=result+newLines[i]+'\n';
+        }
+        assert.deepEqual(result,'function foo(x,y){\n' +
+            '}\n');
+    });
+    it('Function with unary', ()=> {
+        let code = 'function foo(num){\n' +
+            'if(-num<0)\n' +
+            'return 1;\n' +
+            '}';
+        let vars = 'foo(1)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp, vars);
+        let result = '';
+        for (let i = 0; i < newLines.length; i++) {
+            result=result+ newLines[i] + '\n';
+        }
+        assert.deepEqual(result, 'function foo(num){\n' +
+            'if(- num < 0)\n' +
+            'return 1;\n' +
+            '}\n');
+    });
+    it('test grpah if with second while example', ()=> {
+        let code = 'function foo(x){\n'+
+            'if(x==1){\n'+
+            'if(x==1){\n'+
+            'x++;\n'+
+            '}\n'+
+            'else{\n'+
+            'while (x==0) {\n'+
+            'x--;\n'+
+            '}\n'+
+            '}}\n'+
+            'return x;\n'+
+            '}';
+        let vars = 'foo(1,2,3)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        let parsedCode2 =esprima.parseScript(code,{range:true});
+        startSubstitution(code, vars);
+        let result = createGraph(parsedCode2,code);
+        let expectedResult=' shape="box"\n'+
+            'n1 [label="(1) \n'+
+            'x==1" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+            'n2 [label="(2) \n'+
+            'x==1" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+            'n3 [label="(3) \n'+
+            'x++" shape="box" fillcolor="green" style="filled"]\n'+
+            'n4 [label="(4) \n'+
+            'x==0" shape="diamond" value="false"]\n'+
+            'n5 [label="(5) \n'+
+            'x--" shape="box"]\n'+
+            'n6 [label="(6) \n'+
+            'return x;" shape="box" fillcolor="green" style="filled"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n1 -> n2 [label="true" shape="diamond"]\n'+
+            'n1 -> n9 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n2 -> n3 [label="true" shape="diamond"]\n'+
+            'n2 -> n8 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n3 -> n9 [ shape="diamond"]\n'+
+            'n4 -> n5 [label="true" shape="diamond"]\n'+
+            'n4 -> n9 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n5 -> n8 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n8 -> n4 []\n'+
+            'n8 [label=""]\n'+
+            'n9 -> n6 []\n'+
+            'n9 [label="" fillcolor="green" style="filled"]';
+        assert.deepEqual(result, expectedResult);
+    });
+    it('Function with 2 while loops and arrays ', ()=> {
+        let code = 'function foo (items) {\n' +
+            'let i=1;\n' +
+            'while (i>0) {\n' +
+            'let value = items[i];\n' +
+            'let j=0;\n' +
+            'while (j>0){\n' +
+            'items[i+1] = items[j];\n' +
+            'items[j ] = value;\n' +
+            '}\n' +
+            '}\n' +
+            'return items;\n' +
+            '}\n';
+        let vars = 'foo([0,10,2,56])';
+        let temp = parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp, vars);
+        let result = '';
+        for (let i = 0; i < newLines.length; i++) {
+            result = result+ newLines[i] + '\n';
+        }
+        assert.deepEqual(result, 'function foo (items) {\n' +
+            'while (1 > 0) {\n' +
+            'while (0 > 0){\n' +
+            'items [ 2 ] =0;\n' +
+            'items [ 0 ] =10;\n' +
+            '}\n' +
+            '}\n' +
+            'return items;\n' +
+            '}\n');
+    });
+    it('Function with all logic operators ', ()=> {
+        let code = 'function foo(x, y, z){\n' +
+            'if(x>y)\n' +
+            'return false;\n' +
+            'else if(x< y)\n' +
+            'return true;\n' +
+            'else if(x<=z)\n' +
+            'return true;\n' +
+            'else if((x>=z) || (y!=z))\n' +
+            'return false;\n' +
+            '}';
+        let vars = 'foo(3,6,2)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp, vars);
+        let result = '';
+        for (let i = 0; i < newLines.length; i++) {
+            result = result+  newLines[i] + '\n';
+        }
+        assert.deepEqual(result, 'function foo(x, y, z){\n' +
+            'if(x > y)\n' +
+            'return false;\n' +
+            'else if(x < y)\n' +
+            'return true;\n' +
+            'else if(x <= z)\n' +
+            'return true;\n' +
+            'else if(x >= z || y != z)\n' +
+            'return false;\n' +
+            '}\n');
+    });
+    it('Function with if condition with strong equality', ()=>{
+        let code= 'function foo(num){\n' +
+            'let array= [5,65,8];\n' +
+            'num=array[num];\n' +
+            'if (num===1){\n' +
+            'return num;\n' +
+            '}' +
+            '}';
+        let vars='foo(2)';
+        let temp=parseCode(code);
+        makeArray(temp);
+        startSubstitution(temp,vars);
+        let result='';
+        for(let i=0;i<newLines.length;i++){
+            result= result+ newLines[i]+'\n';
+        }
+        assert.deepEqual(result,'function foo(num){\n' +
+            'num=8;\n' +
+            'if (num === 1){\n' +
+            'return num;\n'+
+            '}\n' +
+            '}\n');
+    });
 });
