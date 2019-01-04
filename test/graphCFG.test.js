@@ -501,70 +501,103 @@ describe('Substitution Checks',()=>{
     //         'return 1;\n' +
     //         '}\n');
     // });
-    it('test grpah function with if true result', ()=> {
-        let code = 'function foo(x){\n'+
-            'if (x > 0) {\n'+
-                'x=x+1;\n'+
-            '}\n'+
-            'return c;\n'+
-        '}';
-        let vars = 'foo(1)';
+    // it('test grpah function with if true result', ()=> {
+    //     let code = 'function foo(x){\n'+
+    //         'if (x > 0) {\n'+
+    //             'x=x+1;\n'+
+    //         '}\n'+
+    //         'return c;\n'+
+    //     '}';
+    //     let vars = 'foo(1)';
+    //     let temp = parseCode(code);
+    //     makeArray(temp);
+    //     let parsedCode2 =esprima.parseScript(code,{range:true});
+    //     startSubstitution(code, vars);
+    //     let result = createGraph(parsedCode2,code);
+    //     let expectedResult=' shape="box"\n'+
+    //     'n1 [label="(1) \n'+
+    //     'x > 0" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+    //     'n2 [label="(2) \n'+
+    //     'x=x+1" shape="box" fillcolor="green" style="filled"]\n'+
+    //     'n3 [label="(3) \n'+
+    //     'return c;" shape="box" fillcolor="green" style="filled"]\n'+
+    //     'n4 [label="" shape="circle" fillcolor="green" style="filled"]\n'+
+    //     ' shape="box"\n'+
+    //     ' shape="box"\n'+
+    //     'n1 -> n2 [label="true" shape="diamond"]\n'+
+    //     'n1 -> n4 [label="false" shape="diamond"]\n'+
+    //     ' shape="box"\n'+
+    //     'n2 -> n4 [ shape="diamond"]\n'+
+    //     ' shape="box"\n'+
+    //     ' shape="box"\n'+
+    //     ' shape="box"\n'+
+    //     'n4 -> n3 [ shape="diamond"]';
+    //     assert.deepEqual(result, expectedResult);
+    // });
+    //-------from here new
+    it('test grpah function with the first example ', ()=> {
+        let code = 'function foo(x, y, z){\n'+
+        'let a = x + 1;\n'+
+        'let b = a + y;\n'+
+        'let c = 0;\n'+
+        'if (b < z) {\n'+
+            'c = c + 5;\n'+
+        '} else if (b < z * 2) {\n'+
+            'c = c + x + 5;\n'+
+        '} else {\n'+
+            'c = c + z + 5;\n'+
+        '}\n'+
+        'return c;\n'+
+    '}';
+        let vars = 'foo(1,2,3)';
         let temp = parseCode(code);
         makeArray(temp);
         let parsedCode2 =esprima.parseScript(code,{range:true});
         startSubstitution(code, vars);
         let result = createGraph(parsedCode2,code);
         let expectedResult=' shape="box"\n'+
-        'n1 [label="(1) \n'+
-        'x > 0" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
-        'n2 [label="(2) \n'+
-        'x=x+1" shape="box" fillcolor="green" style="filled"]\n'+
-        'n3 [label="(3) \n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n3 [label="(1) \n'+
+        'a = x + 1\n'+
+        'b = a + y\n'+
+        'c = 0\n'+
+        '" shape="box" fillcolor="green" style="filled"]\n'+
+        'n4 [label="(2) \n'+
+        'b < z" shape="diamond" value="false" fillcolor="green" style="filled"]\n'+
+        'n5 [label="(3) \n'+
+        'c = c + 5" shape="box"]\n'+
+        'n6 [label="(4) \n'+
         'return c;" shape="box" fillcolor="green" style="filled"]\n'+
-        'n4 [label="" shape="circle" fillcolor="green" style="filled"]\n'+
+        'n7 [label="(5) \n'+
+        'b < z * 2" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+        'n8 [label="(6) \n'+
+        'c = c + x + 5" shape="box" fillcolor="green" style="filled"]\n'+
+        'n9 [label="(7) \n'+
+        'c = c + z + 5" shape="box"]\n'+
         ' shape="box"\n'+
         ' shape="box"\n'+
-        'n1 -> n2 [label="true" shape="diamond"]\n'+
-        'n1 -> n4 [label="false" shape="diamond"]\n'+
-        ' shape="box"\n'+
-        'n2 -> n4 [ shape="diamond"]\n'+
         ' shape="box"\n'+
         ' shape="box"\n'+
         ' shape="box"\n'+
-        'n4 -> n3 [ shape="diamond"]';
-        assert.deepEqual(result, expectedResult);
-    });
-    it('test grpah function with if false result ', ()=> {
-        let code = 'function foo(x){\n'+
-            'if (x < 0) {\n'+
-            'x=x+1;\n'+
-            '}\n'+
-            'return c;\n'+
-            '}';
-        let vars = 'foo(1)';
-        let temp = parseCode(code);
-        makeArray(temp);
-        let parsedCode2 =esprima.parseScript(code,{range:true});
-        startSubstitution(code, vars);
-        let result = createGraph(parsedCode2,code);
-        let expectedResult=' shape="box"\n'+
-            'n1 [label="(1) \n'+
-            'x < 0" shape="diamond" value="false" fillcolor="green" style="filled"]\n'+
-            'n2 [label="(2) \n'+
-            'x=x+1" shape="box"]\n'+
-            'n3 [label="(3) \n'+
-            'return c;" shape="box" fillcolor="green" style="filled"]\n'+
-            'n4 [label="" shape="circle" fillcolor="green" style="filled"]\n'+
-            ' shape="box"\n'+
-            ' shape="box"\n'+
-            'n1 -> n2 [label="true" shape="diamond"]\n'+
-            'n1 -> n4 [label="false" shape="diamond"]\n'+
-            ' shape="box"\n'+
-            'n2 -> n4 [ shape="diamond"]\n'+
-            ' shape="box"\n'+
-            ' shape="box"\n'+
-            ' shape="box"\n'+
-            'n4 -> n3 [ shape="diamond"]';
+        ' shape="box"\n'+
+        'n3 -> n4 [ shape="diamond"]\n'+
+        'n4 -> n5 [label="true" shape="diamond"]\n'+
+        'n4 -> n7 [label="false" shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n5 -> n11 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n7 -> n8 [label="true" shape="diamond"]\n'+
+        'n7 -> n9 [label="false" shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n8 -> n11 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n9 -> n11 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n11 -> n6 []\n'+
+        'n11 [label="" fillcolor="green" style="filled"]';
         assert.deepEqual(result, expectedResult);
     });
     it('test grpah if with else', ()=> {
@@ -582,28 +615,200 @@ describe('Substitution Checks',()=>{
         let parsedCode2 =esprima.parseScript(code,{range:true});
         startSubstitution(code, vars);
         let result = createGraph(parsedCode2,code);
-        let expectedResult=' shape="box"\n' +
-            'n1 [label="(1) \n' +
-            'x < 0" shape="diamond" value="false" fillcolor="green" style="filled"]\n' +
-            'n2 [label="(2) \n' +
-            'x=x+1" shape="box"]\n' +
-            'n3 [label="(3) \n' +
-            'return c;" shape="box" fillcolor="green" style="filled"]\n' +
-            'n4 [label="(4) \n' +
-            'c = c + x + 5" shape="box" fillcolor="green" style="filled"]\n' +
-            'n5 [label="" shape="circle" fillcolor="green" style="filled"]\n' +
-            ' shape="box"\n' +
-            ' shape="box"\n' +
-            'n1 -> n2 [label="true" shape="diamond"]\n' +
-            'n1 -> n4 [label="false" shape="diamond"]\n' +
-            ' shape="box"\n' +
-            'n2 -> n5 [ shape="diamond"]\n' +
-            ' shape="box"\n' +
-            ' shape="box"\n' +
-            'n4 -> n5 [ shape="diamond"]\n' +
-            ' shape="box"\n' +
-            ' shape="box"\n' +
-            'n5 -> n3 [ shape="diamond"]';
+        let expectedResult=' shape="box"\n'+
+        'n1 [label="(1) \n'+
+        'x < 0" shape="diamond" value="false" fillcolor="green" style="filled"]\n'+
+        'n2 [label="(2) \n'+
+        'x=x+1" shape="box"]\n'+
+        'n3 [label="(3) \n'+
+        'return c;" shape="box" fillcolor="green" style="filled"]\n'+
+        'n4 [label="(4) \n'+
+        'c = c + x + 5" shape="box" fillcolor="green" style="filled"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n1 -> n2 [label="true" shape="diamond"]\n'+
+        'n1 -> n4 [label="false" shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n2 -> n6 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n4 -> n6 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n6 -> n3 []\n'+
+        'n6 [label="" fillcolor="green" style="filled"]';
+        assert.deepEqual(result, expectedResult);
+    });
+    it('test grpah if with else and update', ()=> {
+        let code = 'function foo(x){\n'+
+            'if (x < 0) {\n'+
+            'x++;\n'+
+            '} else {\n'+
+            'c = c + x + 5;\n'+
+            '}\n'+
+            'return c;\n'+
+            '}';
+        let vars = 'foo(1)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        let parsedCode2 =esprima.parseScript(code,{range:true});
+        startSubstitution(code, vars);
+        let result = createGraph(parsedCode2,code);
+        let expectedResult=' shape="box"\n'+
+            'n1 [label="(1) \n'+
+            'x < 0" shape="diamond" value="false" fillcolor="green" style="filled"]\n'+
+            'n2 [label="(2) \n'+
+            'x++" shape="box"]\n'+
+            'n3 [label="(3) \n'+
+            'return c;" shape="box" fillcolor="green" style="filled"]\n'+
+            'n4 [label="(4) \n'+
+            'c = c + x + 5" shape="box" fillcolor="green" style="filled"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n1 -> n2 [label="true" shape="diamond"]\n'+
+            'n1 -> n4 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n2 -> n6 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n4 -> n6 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n6 -> n3 []\n'+
+            'n6 [label="" fillcolor="green" style="filled"]';
+        assert.deepEqual(result, expectedResult);
+    });
+
+    it('test grpah function with first example and while inside', ()=> {
+        let code = 'function foo(x, y, z){\n'+
+        'let a = x + 1;\n'+
+        'let b = a + y;\n'+
+        'let c = 0;\n'+
+        'if(c==0){\n'+
+            'while(b < z) {\n'+
+                'b= b + 5;\n'+
+            '}if (b < z * 2) {\n'+
+                'c = c + x + 5;\n'+
+            '}\n'+
+        '}\n'+
+        'return c;\n'+
+    '}';
+        let vars = 'foo(1,2,3)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        let parsedCode2 =esprima.parseScript(code,{range:true});
+        startSubstitution(code, vars);
+        let result = createGraph(parsedCode2,code);
+        let expectedResult=' shape="box"\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n3 [label="(1) \n'+
+        'a = x + 1\n'+
+        'b = a + y\n'+
+        'c = 0\n'+
+        '" shape="box" fillcolor="green" style="filled"]\n'+
+        'n4 [label="(2) \n'+
+        'c==0" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+        'n5 [label="(3) \n'+
+        'b < z" shape="diamond" value="false" fillcolor="green" style="filled"]\n'+
+        'n6 [label="(4) \n'+
+        'b= b + 5" shape="box"]\n'+
+        'n7 [label="(5) \n'+
+        'b < z * 2" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+        'n8 [label="(6) \n'+
+        'c = c + x + 5" shape="box" fillcolor="green" style="filled"]\n'+
+        'n9 [label="(7) \n'+
+        'return c;" shape="box" fillcolor="green" style="filled"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n3 -> n4 [ shape="diamond"]\n'+
+        'n4 -> n11 [label="true" shape="diamond"]\n'+
+        'n4 -> n12 [label="false" shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n5 -> n6 [label="true" shape="diamond"]\n'+
+        'n5 -> n7 [label="false" shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n6 -> n11 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n7 -> n8 [label="true" shape="diamond"]\n'+
+        'n7 -> n12 [label="false" shape="diamond"]\n'+
+        ' shape="box"\n'+
+        'n8 -> n12 [ shape="diamond"]\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        ' shape="box"\n'+
+        'n11 -> n5 []\n'+
+        'n11 [label="" fillcolor="green" style="filled"]\n'+
+        'n12 -> n9 []\n'+
+        'n12 [label="" fillcolor="green" style="filled"]';
+        assert.deepEqual(result, expectedResult);
+    });
+    it('test grpah function with first example with array', ()=> {
+        let code ='function foo(x, y, z){\n'+
+            'let a = x[1] + 1;\n'+
+            'let b = a + y;\n'+
+            'let c = 0;\n'+
+            'if (b < z) {\n'+
+                'c = c + 5;\n'+
+            '} else if (b < z * 2) {\n'+
+                'c = c + x[2] + 5;\n'+
+            '} else {\n'+
+                'c = c + z + 5;\n'+
+            '}\n'+
+            'return c;\n'+
+        '}';
+        let vars = 'foo([1,2],2,3)';
+        let temp = parseCode(code);
+        makeArray(temp);
+        let parsedCode2 =esprima.parseScript(code,{range:true});
+        startSubstitution(code, vars);
+        let result = createGraph(parsedCode2,code);
+        let expectedResult=' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n3 [label="(1) \n'+
+            'a = x[1] + 1\n'+
+            'b = a + y\n'+
+            'c = 0\n'+
+            '" shape="box" fillcolor="green" style="filled"]\n'+
+            'n4 [label="(2) \n'+
+            'b < z" shape="diamond" value="false" fillcolor="green" style="filled"]\n'+
+            'n5 [label="(3) \n'+
+            'c = c + 5" shape="box"]\n'+
+            'n6 [label="(4) \n'+
+            'return c;" shape="box" fillcolor="green" style="filled"]\n'+
+            'n7 [label="(5) \n'+
+            'b < z * 2" shape="diamond" value="true" fillcolor="green" style="filled"]\n'+
+            'n8 [label="(6) \n'+
+            'c = c + x[2] + 5" shape="box" fillcolor="green" style="filled"]\n'+
+            'n9 [label="(7) \n'+
+            'c = c + z + 5" shape="box"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n3 -> n4 [ shape="diamond"]\n'+
+            'n4 -> n5 [label="true" shape="diamond"]\n'+
+            'n4 -> n7 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n5 -> n11 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n7 -> n8 [label="true" shape="diamond"]\n'+
+            'n7 -> n9 [label="false" shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n8 -> n11 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            'n9 -> n11 [ shape="diamond"]\n'+
+            ' shape="box"\n'+
+            ' shape="box"\n'+
+            'n11 -> n6 []\n'+
+            'n11 [label="" fillcolor="green" style="filled"]';
         assert.deepEqual(result, expectedResult);
     });
 });

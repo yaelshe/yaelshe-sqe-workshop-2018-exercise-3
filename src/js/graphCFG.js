@@ -3,6 +3,7 @@ import {colors} from './symbolicSubstitution';
 export {createGraph};
 var returnIndex='';
 var indexExit='';
+
 function createGraph(parsedCode,codeToParse) {
     const cfg = esgraph(parsedCode.body[0].body);
     const cfgObject = esgraph.dot(cfg, {counter:0, source: codeToParse});
@@ -12,11 +13,12 @@ function createGraph(parsedCode,codeToParse) {
     cfgLines=removeExit(cfgLines);
     cfgLines=removeException(cfgLines);
     cfgLines= combineDec(cfgLines);
-    cfgLines=combineReturn(cfgLines);
+    //cfgLines=combineReturn(cfgLines);
     cfgLines= changeShapes(cfgLines);
     cfgLines= colorGraph(cfgLines,cfg);
     cfgLines= colorRealGraph(cfgLines,cfg);
     cfgLines=addNumbers(cfgLines);
+    cfgLines=createMerges(cfgLines);
     let result= getString(cfgLines);
     return result;
 }
@@ -60,14 +62,14 @@ function getString(cfgLines){
     let string=cfgLines.join('\n');
     return string;
 }
-function changeArrow(cfgLines){
-    for(let i=0;i<cfgLines.length;i++) {
-        if (cfgLines[i].includes('-> n' + returnIndex))
-            cfgLines[i] = cfgLines[i].replace('-> n' + returnIndex, '-> n' + (indexExit));
-    }
-    return cfgLines;
-
-}
+// function changeArrow(cfgLines){
+//     for(let i=0;i<cfgLines.length;i++) {
+//         if (cfgLines[i].includes('-> n' + returnIndex))
+//             cfgLines[i] = cfgLines[i].replace('-> n' + returnIndex, '-> n' + (indexExit));
+//     }
+//     return cfgLines;
+//
+// }
 
 function removeConn(cfgLines,indexStart,indexFinish){
     for(let j=indexStart;j<indexFinish;j++ ) {
@@ -91,13 +93,62 @@ function conRemove(cfgLines,i,string,indexFinish) {
     }
 
 }
-function combineReturn(cfgLines)
-{
-    let string='n'+(indexExit)+ ' [label=""]';
-    cfgLines.splice(indexExit, 0, string);
-    cfgLines=changeArrow(cfgLines);
-    cfgLines.push('n'+(indexExit)+' -> n'+returnIndex +' []');
+// function combineReturn(cfgLines)
+// {
+//     let string='n'+(indexExit)+ ' [label=""]';
+//     cfgLines.splice(indexExit, 0, string);
+//     cfgLines=changeArrow(cfgLines);
+//     cfgLines.push('n'+(indexExit)+' -> n'+returnIndex +' []');
+//     return cfgLines;
+// }
+function createMerges(cfgLines){
+    for(let i=0;i<cfgLines.length;i++) {
+        if (cfgLines[i].includes('->'))
+            break;
+        else if(cfgLines[i].includes('label="('))
+            cfgLines=mergeCircle(cfgLines,i);
+    }
     return cfgLines;
+
+}
+function mergeCircle(cfgLines,index)
+{
+    let mergeIndex=indexExit+1;
+    let rate=checkInRate(cfgLines,index);
+    if (rate<=1)
+        return cfgLines;
+    indexExit++;
+    let string= getStringMerge(cfgLines,index);
+    for(let i=0;i<cfgLines.length;i++) {
+        if(i=== returnIndex)
+            continue;
+        if(cfgLines[i].includes('-> n'+index+' ')) {
+            cfgLines[i] = cfgLines[i].replace('-> n' + index, '-> n' + (mergeIndex));
+        }
+        else continue;}
+    cfgLines.push('n'+(mergeIndex)+' -> n'+index +' []');
+    cfgLines.push(string);
+    return cfgLines;
+}
+
+function getStringMerge(cfgLines,index){
+    let result='';
+    if(!cfgLines[index].includes('green'))
+        result='n'+(indexExit)+ ' [label=""]';
+    else
+        result= 'n'+(indexExit)+ ' [label="" fillcolor="green" style="filled"]' ;
+    return result;
+}
+function checkInRate(cfgLines,index){
+    let result=0;
+    for(let i=0;i<cfgLines.length;i++){
+        if (!cfgLines[i].includes('->'))
+            continue;
+        if(cfgLines[i].includes('-> n'+index+' '))
+            result++;
+        else continue;
+    }
+    return result;
 }
 
 function removeException(cfgLines){
@@ -127,12 +178,13 @@ function checkForShapes(cfgLines,i)
         return false;
 }
 function conChangeShapes(cfgLines,i){
-    if(cfgLines[i].includes('label=""')){
-        let index=cfgLines[i].lastIndexOf(']');
-        let replace = cfgLines[i].slice(0, index) + ' shape="circle"' +' fillcolor="green" style="filled"'+ cfgLines[i].slice(index);
-        cfgLines[i] = replace;
-    }
-    else if(!cfgLines[i].includes('->')){
+    // if(cfgLines[i].includes('label=""')){
+    //     let index=cfgLines[i].lastIndexOf(']');
+    //     let replace = cfgLines[i].slice(0, index) + ' shape="circle"' + cfgLines[i].slice(index);
+    //     cfgLines[i] = replace;
+    // }
+    // else
+    if(!cfgLines[i].includes('->')){
         let index=cfgLines[i].lastIndexOf(']');
         let replace = cfgLines[i].slice(0, index) + ' shape="box"' + cfgLines[i].slice(index);
         cfgLines[i] = replace;
@@ -217,9 +269,7 @@ function checkIfCond(cfg,i){
 
 function checkCon(cfgLines,index)
 {
-    if(cfgLines.includes('n'+index+' -> n'+(index+1)+' []'))
-        return true;
-    return false;
+    return (cfgLines.includes('n'+index+' -> n'+(index+1)+' []'));
 }
 function changeToColor(cfgLines,IfStatement){
     for(let i=0;i<IfStatement.length;i++)
